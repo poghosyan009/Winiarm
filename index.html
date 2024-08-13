@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка с барабаном</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2b2b2b;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #e0e0e0;
+        }
+        .roulette-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .roulette-wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-image: conic-gradient(
+                red 0 10%, black 10% 20%, red 20% 30%, black 30% 40%, red 40% 50%,
+                black 50% 60%, red 60% 70%, black 70% 80%, red 80% 90%, black 90% 100%
+            );
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: spin 4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            top: 140px;
+            left: 140px;
+            animation: ball-spin 4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes ball-spin {
+            0% { top: 140px; left: 140px; }
+            25% { top: 50px; left: 250px; }
+            50% { top: 140px; left: 140px; }
+            75% { top: 250px; left: 50px; }
+            100% { top: 140px; left: 140px; }
+        }
+        input, select {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00aaff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0077cc;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Игра в рулетку</h1>
+    <div class="roulette-container">
+        <div class="roulette-wheel" id="rouletteWheel"></div>
+        <div class="ball" id="ball"></div>
+    </div>
+    <div>
+        <label for="betType">Тип ставки:</label>
+        <select id="betType">
+            <option value="number">Номер (0-36)</option>
+            <option value="color">Цвет (Красный/Черный)</option>
+            <option value="evenOdd">Чет/Нечет</option>
+            <option value="lowHigh">1-18 / 19-36</option>
+        </select>
+    </div>
+    <div id="betInput">
+        <input type="number" id="betNumber" min="0" max="36" placeholder="Введите номер">
+    </div>
+    <button onclick="playRoulette()">Играть</button>
+
+    <p id="result"></p>
+
+    <script>
+        function playRoulette() {
+            const betType = document.getElementById('betType').value;
+            let betValue;
+            if (betType === 'number') {
+                betValue = parseInt(document.getElementById('betNumber').value);
+                if (isNaN(betValue) || betValue < 0 || betValue > 36) {
+                    alert("Введите корректный номер от 0 до 36.");
+                    return;
+                }
+            } else if (betType === 'color') {
+                betValue = prompt("Введите цвет: 'red' для Красного или 'black' для Черного").toLowerCase();
+                if (betValue !== 'red' && betValue !== 'black') {
+                    alert("Введите корректный цвет: 'red' или 'black'.");
+                    return;
+                }
+            } else if (betType === 'evenOdd') {
+                betValue = prompt("Введите 'even' для Четного или 'odd' для Нечетного").toLowerCase();
+                if (betValue !== 'even' && betValue !== 'odd') {
+                    alert("Введите корректное значение: 'even' или 'odd'.");
+                    return;
+                }
+            } else if (betType === 'lowHigh') {
+                betValue = prompt("Введите 'low' для 1-18 или 'high' для 19-36").toLowerCase();
+                if (betValue !== 'low' && betValue !== 'high') {
+                    alert("Введите корректное значение: 'low' или 'high'.");
+                    return;
+                }
+            }
+
+            const winningNumber = Math.floor(Math.random() * 37);
+            const colors = ['black', 'red']; // Array for colors
+            const winningColor = colors[winningNumber % 2];
+
+            let resultText = `Выпал номер ${winningNumber} (${winningColor.toUpperCase()}). `;
+            let isWin = false;
+
+            if (betType === 'number' && betValue === winningNumber) {
+                isWin = true;
+            } else if (betType === 'color' && betValue === winningColor) {
+                isWin = true;
+            } else if (betType === 'evenOdd' && 
+                       ((betValue === 'even' && winningNumber % 2 === 0) || 
+                        (betValue === 'odd' && winningNumber % 2 !== 0))) {
+                isWin = true;
+            } else if (betType === 'lowHigh' && 
+                       ((betValue === 'low' && winningNumber >= 1 && winningNumber <= 18) || 
+                        (betValue === 'high' && winningNumber >= 19 && winningNumber <= 36))) {
+                isWin = true;
+            }
+
+            if (isWin) {
+                resultText += "Поздравляем! Вы выиграли!";
+            } else {
+                resultText += "К сожалению, вы проиграли.";
+            }
+
+            document.getElementById('result').innerText = resultText;
+
+            // Reset animations
+            const wheel = document.getElementById('rouletteWheel');
+            const ball = document.getElementById('ball');
+            wheel.style.animation = 'none';
+            ball.style.animation = 'none';
+            setTimeout(() => {
+                wheel.style.animation = '';
+                ball.style.animation = '';
+            }, 10); // Restart animation
+        }
+
+        document.getElementById('betType').addEventListener('change', function() {
+            const betInputDiv = document.getElementById('betInput');
+            if (this.value === 'number') {
+                betInputDiv.innerHTML = '<input type="number" id="betNumber" min="0" max="36" placeholder="Введите номер">';
+            } else {
+                betInputDiv.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
